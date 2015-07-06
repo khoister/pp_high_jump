@@ -14,6 +14,7 @@ import java.util.IllegalFormatException;
 public class IO {
 
 	private static Console console = System.console();
+	private static BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
 	
 	public static final void printf(String formatString, Object... args) {
 		try {
@@ -37,9 +38,6 @@ public class IO {
 		if (console != null) {
 			line = console.readLine(userPrompt);
 		} else {
-			BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
-
-			print(userPrompt);
 			line = bufferedReader.readLine();
 		}
 		line.trim();
