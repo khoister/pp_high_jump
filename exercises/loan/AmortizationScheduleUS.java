@@ -9,15 +9,15 @@ import exercises.utils.IO;
 
 public class AmortizationScheduleUS extends AmortizationSchedule {
 
-	private long amountBorrowed = 0;		// in US cents
+	private double amountBorrowed = 0d;
 	private double apr = 0d;
-	private int initialTermMonths = 0;
-	private long monthlyPaymentAmount = 0;	// in US cents
+	private int    initialTermMonths = 0;
+	private double monthlyPaymentAmount = 0d;
 
-	private static final String headerFormatString = "%1$-20s%2$-20s%3$-20s%4$s,%5$s,%6$s\n";
-	private static final String bodyFormatString = "%1$-20d%2$-20.2f%3$-20.2f%4$.2f,%5$.2f,%6$.2f\n";
+	private static final String headerFormatString = "%1$-20s%2$-20s%3$-20s%4$-20s%5$-20s%6$-20s%7$-20s\n";
+	private static final String bodyFormatString = "%1$-20d%2$-20.2f%3$-20.2f%4$-20.2f%5$-20.2f%6$-20.2f%7$-20.2f\n";
 
-	public long getLoanAmount() {
+	public double getLoanAmount() {
 		return amountBorrowed;
 	}
 
@@ -33,7 +33,7 @@ public class AmortizationScheduleUS extends AmortizationSchedule {
 		return initialTermMonths;
 	}
 
-	public long getMonthlyPaymentAmount() {
+	public double getMonthlyPaymentAmount() {
 		return monthlyPaymentAmount;
 	}
 
@@ -48,8 +48,7 @@ public class AmortizationScheduleUS extends AmortizationSchedule {
 			throw new IllegalArgumentException();
 		}
 
-		// Convert from dollars to cents
-		amountBorrowed = Math.round(amount.getAmount() * 100);
+		amountBorrowed = amount.getAmount();
 		apr = interestRate.getValue();
 		initialTermMonths = Term.yearsToMonths(term.getValue());
 		
@@ -71,24 +70,27 @@ public class AmortizationScheduleUS extends AmortizationSchedule {
 	//	The fourth column has the current balance.  The total payment amount and the interest paid fields.
 	public void printHeader() {
 		exercises.utils.IO.printf(headerFormatString,
-			"PaymentNumber", "PaymentAmount", "PaymentInterest", "CurrentBalance", "TotalPayments", "TotalInterestPaid");
+			"PaymentNumber", "PaymentAmount", "PaymentInterest", "PaymentPrincipal", "CurrentBalance", "TotalPayments", "TotalInterestPaid");
 	}
 
 	public void print(
 		int  paymentNumber,
-		long curMonthlyPayment,
-		long curMonthlyInterest,
-		long curBalance,
-		long totalPayments,
-		long totalInterestPaid) {
+		double curMonthlyPayment,
+		double curMonthlyInterest,
+		double curMonthlyPrincipal,
+		double curBalance,
+		double totalPayments,
+		double totalInterestPaid) {
 
 		// output is in dollars
-		exercises.utils.IO.printf(bodyFormatString, paymentNumber++,
-			((double) curMonthlyPayment) / 100d,
-			((double) curMonthlyInterest) / 100d,
-			((double) curBalance) / 100d,
-			((double) totalPayments) / 100d,
-			((double) totalInterestPaid) / 100d);
+		exercises.utils.IO.printf(bodyFormatString,
+			paymentNumber,
+			curMonthlyPayment,
+			curMonthlyInterest,
+			curMonthlyPrincipal,
+			curBalance,
+			totalPayments,
+			totalInterestPaid);
 	}
 }
 

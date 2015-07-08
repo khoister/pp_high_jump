@@ -40,23 +40,22 @@ import exercises.utils.IO;
 
 abstract public class AmortizationSchedule {
 
-	abstract long   getLoanAmount();
+	abstract double getLoanAmount();
 	abstract double getMonthlyInterestDivisor();
 	abstract double getInterestRate();
 	abstract int    getInitialTermMonths();
-	abstract long   getMonthlyPaymentAmount();
+	abstract double getMonthlyPaymentAmount();
 	abstract void   printHeader();
 	abstract void   print(int paymentNumber,
-	                      long curMonthlyPayment,
-	                      long curMonthlyInterest,
-	                      long curBalance,
-	                      long totalPayments,
-	                      long totalInterestPaid);
+	                      double curMonthlyPayment,
+	                      double curMonthlyInterest,
+	                      double curMonthlyPrincipal,
+	                      double curBalance,
+	                      double totalPayments,
+	                      double totalInterestPaid);
 
-	private double monthlyInterest = 0d;
 
-
-	protected long calculateMonthlyPayment() {
+	protected double calculateMonthlyPayment() {
 		// M = P * (J / (1 - (Math.pow(1/(1 + J), N))));
 		//
 		// Where:
@@ -68,19 +67,19 @@ abstract public class AmortizationSchedule {
 		// 
 		
 		// calculate J
-		monthlyInterest = getInterestRate() / getMonthlyInterestDivisor();
+		double monthlyInterestRate = getInterestRate() / getMonthlyInterestDivisor();
 		
 		// this is 1 / (1 + J)
-		double tmp = 1d / (1d + monthlyInterest);
+		double tmp = 1d / (1d + monthlyInterestRate);
 		
 		// this is Math.pow(1/(1 + J), N)
 		tmp = Math.pow(tmp, getInitialTermMonths());
 		
 		// this is J / (1 - (Math.pow(1/(1 + J), N))))
-		tmp = monthlyInterest / (1d - tmp);
+		tmp = monthlyInterestRate / (1d - tmp);
 		
 		// M = P * (J / (1 - (Math.pow(1/(1 + J), N))));
-		return Math.round(getLoanAmount() * tmp);
+		return getLoanAmount() * tmp;
 	}
 	
 	// The output should include:
@@ -96,51 +95,24 @@ abstract public class AmortizationSchedule {
 		// 3.      Calculate Q = P - C, this is the new balance of your principal of your loan.
 		// 4.      Set P equal to Q and go back to Step 1: You thusly loop around until the value Q (and hence P) goes to zero.
 		// 
+		
+		double balance             = getLoanAmount();
+		double monthlyPayment      = getMonthlyPaymentAmount();
+		double monthlyInterestRate = getInterestRate() / getMonthlyInterestDivisor();
+		int    months              = getInitialTermMonths();
+		double totalPayments       = 0d;
+		double totalInterestPaid   = 0d;
 
 		printHeader();
-		
-		long balance           = getLoanAmount();
-		int  paymentNumber     = 0;
-		long totalPayments     = 0;
-		long totalInterestPaid = 0;
-		
-		// Output the first row at month 0
-		print(paymentNumber++, 0, 0, getLoanAmount(), totalPayments, totalInterestPaid);
+		for (int paymentNumber = 1; paymentNumber <= months; ++paymentNumber) {
+			double monthlyInterest      = balance * monthlyInterestRate;
+			double monthlyPrincipalPaid = monthlyPayment - monthlyInterest;
+			double newBalance           = Math.abs(balance - monthlyPrincipalPaid);
+			totalPayments              += monthlyPayment;
+			totalInterestPaid          += monthlyInterest;
 
-		final int maxNumberOfPayments = getInitialTermMonths() + 1;
-		while ((balance > 0) && (paymentNumber <= maxNumberOfPayments)) {
-			// Calculate H = P x J, this is your current monthly interest
-			long curMonthlyInterest = Math.round(((double) balance) * monthlyInterest);
-
-			// the amount required to payoff the loan
-			long curPayoffAmount = balance + curMonthlyInterest;
-			
-			// the amount to payoff the remaining balance may be less than the calculated monthlyPaymentAmount
-			long curMonthlyPaymentAmount = Math.min(getMonthlyPaymentAmount(), curPayoffAmount);
-			
-			// it's possible that the calculated monthlyPaymentAmount is 0,
-			// or the monthly payment only covers the interest payment - i.e. no principal
-			// so the last payment needs to payoff the loan
-			if ((paymentNumber == maxNumberOfPayments) &&
-					((curMonthlyPaymentAmount == 0) || (curMonthlyPaymentAmount == curMonthlyInterest))) {
-				curMonthlyPaymentAmount = curPayoffAmount;
-			}
-			
-			// Calculate C = M - H, this is your monthly payment minus your monthly interest,
-			// so it is the amount of principal you pay for that month
-			long curMonthlyPrincipalPaid = curMonthlyPaymentAmount - curMonthlyInterest;
-			
-			// Calculate Q = P - C, this is the new balance of your principal of your loan.
-			long curBalance = balance - curMonthlyPrincipalPaid;
-			
-			totalPayments += curMonthlyPaymentAmount;
-			totalInterestPaid += curMonthlyInterest;
-
-			// Print the rest of the amortization schedule
-			print(paymentNumber++, curMonthlyPaymentAmount, curMonthlyInterest, curBalance, totalPayments, totalInterestPaid);
-
-			// Set P equal to Q and go back to Step 1: You thusly loop around until the value Q (and hence P) goes to zero.
-			balance = curBalance;
+			print(paymentNumber, monthlyPayment, monthlyInterest, monthlyPrincipalPaid, newBalance, totalPayments, totalInterestPaid);
+			balance = newBalance;
 		}
 	}
 }
